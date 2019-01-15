@@ -2,7 +2,11 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -41,7 +45,22 @@ public class GsonPractice {
             String[] maxT = new String[3];
             int timeIntervelIndex = -1;
 
-            InputStreamReader inputFile = new InputStreamReader(new FileInputStream("test1.json"), "UTF8");
+            URL uurl = new URL("https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=rdec-key-123-45678-011121314");
+//            HttpURLConnection con = (HttpURLConnection)uurl.openConnection();
+//            con.setRequestMethod("GET");
+
+//            con.setDoOutput(true);
+//            con.connect();
+//            System.out.println(con.getContent());
+
+            InputStream is = uurl.openStream();
+
+
+            System.out.println(is);
+
+
+            InputStreamReader inputFile = new InputStreamReader(is, "UTF8");
+//            InputStreamReader inputFile = new InputStreamReader(new FileInputStream("test1.json"), "UTF8");
             JsonReader jsonReader = new JsonReader(inputFile);
 
             Gson gson = new Gson();
@@ -49,6 +68,7 @@ public class GsonPractice {
             // fromJson() parse 出的 object 用 arrayList 去接
             TypeToken<ArrayList<Event>> type = new TypeToken<ArrayList<Event>>(){};     //ArrayList<Event>
             ArrayList<Event> jsonArray = gson.fromJson(jsonReader, type.getType());
+//            Event event =gson.fromJson(jsonReader, Event.class);
 
             ArrayList<Location> locations = jsonArray.get(0).getRecords().getLocation();
 
@@ -97,7 +117,7 @@ public class GsonPractice {
                 }
                 for (int j = 0; j < 3; j++){
                     query = "INSERT INTO measurement (location, start_time, finish_time, wx, pop, min_t, max_t) VALUES ('" + city + "', '" + begin[j] + "', '" + finish[j] + "', '" + wx[j] + "', " + pop[j] + ", " + minT[j] + ", " + maxT[j] + ");";
-                    stmt.executeUpdate(query);
+//                    stmt.executeUpdate(query);
                 }
             }
         } catch (Exception e) {
