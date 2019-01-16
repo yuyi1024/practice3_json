@@ -1,19 +1,34 @@
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.util.EntityUtils;
 
-import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ArrayList;
 
 public class GsonPractice {
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception{
 
         // connect to DB
         String url = "jdbc:sqlserver://localhost:1433;databasename=weather;integratedSecurity=true";
@@ -43,34 +58,21 @@ public class GsonPractice {
             String[] pop = new String[3];
             String[] minT = new String[3];
             String[] maxT = new String[3];
-            int timeIntervelIndex = -1;
+            int timeIntervelIndex = 0;
 
-            URL uurl = new URL("https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=rdec-key-123-45678-011121314");
-//            HttpURLConnection con = (HttpURLConnection)uurl.openConnection();
-//            con.setRequestMethod("GET");
+            HttpClientRequest hcr = new HttpClientRequest("https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=rdec-key-123-45678-011121314");
+            String sjson = hcr.getUriContext();
+            System.out.println(sjson);
 
-//            con.setDoOutput(true);
-//            con.connect();
-//            System.out.println(con.getContent());
-
-            InputStream is = uurl.openStream();
-
-
-            System.out.println(is);
-
-
-            InputStreamReader inputFile = new InputStreamReader(is, "UTF8");
 //            InputStreamReader inputFile = new InputStreamReader(new FileInputStream("test1.json"), "UTF8");
-            JsonReader jsonReader = new JsonReader(inputFile);
+//            JsonReader jsonReader = new JsonReader(inputFile);
 
             Gson gson = new Gson();
 
-            // fromJson() parse 出的 object 用 arrayList 去接
-            TypeToken<ArrayList<Event>> type = new TypeToken<ArrayList<Event>>(){};     //ArrayList<Event>
-            ArrayList<Event> jsonArray = gson.fromJson(jsonReader, type.getType());
-//            Event event =gson.fromJson(jsonReader, Event.class);
+            // fromJson() parse 出的 Event
+            Event event =gson.fromJson(sjson, Event.class);
 
-            ArrayList<Location> locations = jsonArray.get(0).getRecords().getLocation();
+            ArrayList<Location> locations = event.getRecords().getLocation();
 
             for (Location location : locations){
                 city = location.getLocationName();    //嘉義市/...
@@ -118,6 +120,7 @@ public class GsonPractice {
                 for (int j = 0; j < 3; j++){
                     query = "INSERT INTO measurement (location, start_time, finish_time, wx, pop, min_t, max_t) VALUES ('" + city + "', '" + begin[j] + "', '" + finish[j] + "', '" + wx[j] + "', " + pop[j] + ", " + minT[j] + ", " + maxT[j] + ");";
 //                    stmt.executeUpdate(query);
+//                    System.out.println(query);
                 }
             }
         } catch (Exception e) {
