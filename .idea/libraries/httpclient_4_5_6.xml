@@ -2,6 +2,8 @@
   <library name="httpclient-4.5.6">
     <CLASSES>
       <root url="jar://C:/Program Files/Java/httpcomponents-client/httpclient-4.5.6.jar!/" />
+      <root url="jar://C:/Program Files/Java/httpcomponents-client/httpcore-4.4.10.jar!/" />
+      <root url="jar://C:/Program Files/Java/httpcomponents-client/commons-logging-1.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

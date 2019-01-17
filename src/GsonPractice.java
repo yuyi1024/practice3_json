@@ -1,34 +1,14 @@
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 
-import javax.net.ssl.*;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class GsonPractice {
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args){
 
         // connect to DB
         String url = "jdbc:sqlserver://localhost:1433;databasename=weather;integratedSecurity=true";
@@ -52,25 +32,20 @@ public class GsonPractice {
             String parameterValue = "";
             String startTime = "";
             String endTime = "";
-            String[] begin = new String[3];
-            String[] finish = new String[3];
-            String[] wx = new String[3];
-            String[] pop = new String[3];
-            String[] minT = new String[3];
-            String[] maxT = new String[3];
-            int timeIntervelIndex = 0;
-
-            HttpClientRequest hcr = new HttpClientRequest("https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=rdec-key-123-45678-011121314");
-            String sjson = hcr.getUriContext();
-            System.out.println(sjson);
-
-//            InputStreamReader inputFile = new InputStreamReader(new FileInputStream("test1.json"), "UTF8");
-//            JsonReader jsonReader = new JsonReader(inputFile);
-
+            ArrayList<WetherRow> wetherRows = new ArrayList<>();
             Gson gson = new Gson();
 
+            //從 properties 檔取得 url
+            Properties properties = new Properties();
+            properties.load(new InputStreamReader(new FileInputStream("urlSetting.properties"), "UTF8"));
+            String request_uri = properties.getProperty("request_uri");
+
+            //取得 url 回傳資訊
+            HttpClientRequest request = new HttpClientRequest(request_uri);
+            String responseContext = request.getUriContext();
+
             // fromJson() parse 出的 Event
-            Event event =gson.fromJson(sjson, Event.class);
+            Event event =gson.fromJson(responseContext, Event.class);
 
             ArrayList<Location> locations = event.getRecords().getLocation();
 
@@ -81,35 +56,41 @@ public class GsonPractice {
                     category = weatherElement.getElementName();   //Wx/POP/Tmax/Tmin
 
                     for (Time time : weatherElement.getTime()){
-                        parameterValue = time.getParameter().getParameterName();
-                        startTime = time.getStartTime();
-                        endTime = time.getEndTime();
+                        parameterValue = time.getParameter().getParameterName();    //value
+                        startTime = time.getStartTime();    //開始時間
+                        endTime = time.getEndTime();    //結束時間
+                        int rowsIndex = -1; //ArrayList 定位
 
-                        if(startTime.equals("2019-01-15 00:00:00") && endTime.equals("2019-01-15 06:00:00")){
-                            timeIntervelIndex = 0;
-                        } else if(startTime.equals("2019-01-15 06:00:00") && endTime.equals("2019-01-15 18:00:00")){
-                            timeIntervelIndex = 1;
-                        } else if(startTime.equals("2019-01-15 18:00:00") && endTime.equals("2019-01-16 06:00:00")){
-                            timeIntervelIndex = 2;
+                        //判斷是否已存在時間區間相同的 WetherRow，若否則 new 一個
+                        for(WetherRow row : wetherRows){
+                            if (row.timeEquals(startTime, endTime)){
+                                rowsIndex = wetherRows.indexOf(row);
+                                break;
+                            }
                         }
+                        if(rowsIndex < 0){
+                            wetherRows.add(new WetherRow());
+                            rowsIndex = wetherRows.size() - 1;
+                        }
+
+                        wetherRows.get(rowsIndex).setStartTime(startTime);
+                        wetherRows.get(rowsIndex).setEndTime(endTime);
 
                         switch(category){
                             case "Wx":
-                                wx[timeIntervelIndex] = parameterValue;
-                                begin[timeIntervelIndex] = startTime;
-                                finish[timeIntervelIndex] = endTime;
+                                wetherRows.get(rowsIndex).setWx(parameterValue);
                                 break;
 
                             case "PoP":
-                                pop[timeIntervelIndex] = parameterValue;
+                                wetherRows.get(rowsIndex).setPop(parameterValue);
                                 break;
 
                             case "MinT":
-                                minT[timeIntervelIndex] = parameterValue;
+                                wetherRows.get(rowsIndex).setMinT(parameterValue);
                                 break;
 
                             case "MaxT":
-                                maxT[timeIntervelIndex] = parameterValue;
+                                wetherRows.get(rowsIndex).setMaxT(parameterValue);
                                 break;
 
                             default:
@@ -117,11 +98,12 @@ public class GsonPractice {
                         }
                     }
                 }
-                for (int j = 0; j < 3; j++){
-                    query = "INSERT INTO measurement (location, start_time, finish_time, wx, pop, min_t, max_t) VALUES ('" + city + "', '" + begin[j] + "', '" + finish[j] + "', '" + wx[j] + "', " + pop[j] + ", " + minT[j] + ", " + maxT[j] + ");";
-//                    stmt.executeUpdate(query);
-//                    System.out.println(query);
+                for (WetherRow row : wetherRows){
+                    query = "INSERT INTO measurement (location, start_time, finish_time, wx, pop, min_t, max_t) VALUES ('" + city + "', '" + row.getStartTime() + "', '" + row.getEndTime() + "', '" + row.getWx() + "', " + row.getPop() + ", " + row.getMinT() + ", " + row.getMaxT() + ");";
+                    stmt.executeUpdate(query);
+                    System.out.println(query);
                 }
+                wetherRows.clear();
             }
         } catch (Exception e) {
             e.printStackTrace();
