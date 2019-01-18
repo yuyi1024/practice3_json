@@ -1,18 +1,14 @@
 import com.google.gson.Gson;
 import com.weather.opendata.*;
-import com.weather.opendata.highcharts.*;
+import com.weather.opendata.Time;
 
 import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Properties;
 
 public class GsonPractice {
-    public static void main(String[] args) throws UnsupportedEncodingException {
+    public static void main(String[] args){
 
         // connect to DB
         String url = "jdbc:sqlserver://localhost:1433;databasename=weather;integratedSecurity=true";
@@ -104,70 +100,12 @@ public class GsonPractice {
                 }
                 for (WeatherRow row : weatherRows){
                     query = "INSERT INTO measurement (location, start_time, finish_time, wx, pop, min_t, max_t) VALUES ('" + city + "', '" + row.getStartTime() + "', '" + row.getEndTime() + "', '" + row.getWx() + "', " + row.getPop() + ", " + row.getMinT() + ", " + row.getMaxT() + ");";
-//                    stmt.executeUpdate(query);
-//                    System.out.println(query);
+                    stmt.executeUpdate(query);
                 }
                 weatherRows.clear();
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            try {
-                conn.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
-
-        Calendar c =Calendar.getInstance();
-        c.add(Calendar.DATE, -10);
-
-
-//        pointStart:Date.UTC(2010, 0, 1, 12, 4,5),
-
-        ArrayList<Integer> data = new ArrayList<>();
-        data.add(4);
-        data.add(5);
-        data.add(1);
-        data.add(2);
-        data.add(5);
-
-
-        ArrayList<DataSeries> series = new ArrayList<>();
-        series.add(new DataSeries("Installation", data));
-        series.add(new DataSeries("Manufacturing", data));
-        series.add(new DataSeries("Sales & Distribution", data));
-
-
-        Chart line = new Chart(new Title("17~18日氣象預測折線圖"),
-                               new Subtitle("冷冷"),
-                               new XAxis(new Title("時間")),
-                               new YAxis(new Title("度C")),
-                               new Legend("vertical", "right", "middle"),
-                               new PlotOptions(new Series(c.getTime(), new Long(24 * 60 * 60 * 1000))),
-                               series
-                               );
-
-        Gson gson = new Gson();
-        String x = gson.toJson(line);
-
-        x = x.replaceAll("\"", "");
-        x = x.replaceAll("#", "'");
-
-        System.out.println(x);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

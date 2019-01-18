@@ -6,8 +6,8 @@ public class Legend {
     private String verticalAlign;
 
     public Legend(String layout, String align, String verticalAlign) {
-        this.layout = "#" + layout + "#";
-        this.align = "#" + align + "#";
-        this.verticalAlign = "#" + verticalAlign + "#";
+        this.layout = "\'" + layout + "\'";
+        this.align = "\'" + align + "\'";
+        this.verticalAlign = "\'" + verticalAlign + "\'";
     }
 }

@@ -8,7 +8,7 @@ public class Series {
     private Long pointInterval;
 
     public Series(Date pointStart,  Long pointInterval) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyy, MM, dd, HH, mm, ss");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy, M, d, H, m, s");
         String pt = df.format(pointStart);
 
         this.pointStart = "Date.UTC(" + pt + ")";
