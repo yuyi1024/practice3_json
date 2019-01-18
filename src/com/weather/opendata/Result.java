@@ -1,3 +1,5 @@
+package com.weather.opendata;
+
 import java.util.ArrayList;
 
 public class Result {
@@ -23,5 +25,8 @@ public class Result {
 
     public void setFields(ArrayList<Column> fields) {
         this.fields = fields;
+    }
+
+    public static class Data {
     }
 }

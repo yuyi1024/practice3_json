@@ -1,3 +1,5 @@
+package com.weather.opendata;
+
 public class Column {
     private String id;
     private String type;

@@ -1,3 +1,5 @@
+package com.weather.opendata;
+
 import java.util.ArrayList;
 
 public class Records {

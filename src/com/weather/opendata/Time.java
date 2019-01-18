@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+package com.weather.opendata;
 
 public class Time {
     private String startTime;

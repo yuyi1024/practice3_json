@@ -1,4 +1,4 @@
-public class WetherRow {
+public class WeatherRow {
     private String startTime;
     private String endTime;
     private String wx;
@@ -6,7 +6,7 @@ public class WetherRow {
     private String minT;
     private String maxT;
 
-    public WetherRow() {
+    public WeatherRow() {
     }
 
     public String getStartTime() {

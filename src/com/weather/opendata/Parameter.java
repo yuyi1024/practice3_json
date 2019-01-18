@@ -1,3 +1,5 @@
+package com.weather.opendata;
+
 public class Parameter {
     private String parameterName;
     private String parameterValue;

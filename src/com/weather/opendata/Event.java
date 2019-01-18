@@ -1,3 +1,5 @@
+package com.weather.opendata;
+
 public class Event {
     private String success;
     private Result result;
