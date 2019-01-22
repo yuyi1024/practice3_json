@@ -1,5 +1,4 @@
 import org.apache.http.HttpEntity;
-import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.TrustAllStrategy;
@@ -7,11 +6,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import org.apache.logging.log4j.Logger;
 
 public class HttpClientRequest {
     private String uri;
@@ -21,7 +16,8 @@ public class HttpClientRequest {
         this.uri = uri;
     }
 
-    public String getUriContext(){
+    public String getUriContext(Logger logger){
+        logger.debug("Go to HttpClientRequest.getUriContext().");
         try {
             CloseableHttpClient httpClient = HttpClients
                 .custom()
@@ -36,7 +32,7 @@ public class HttpClientRequest {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Something throws the exception when connect to the url.", e);
             uriContext = "";
         } finally {
             return uriContext;
